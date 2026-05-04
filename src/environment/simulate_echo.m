@@ -28,8 +28,8 @@ function [rx_signal, receive_time_axis] = simulate_echo(tx_signal, fs, fc, c, ta
     rx_signal(start_idx:end_idx) = tx_doppler;
     
     % 5. Add Additive White Gaussian Noise (AWGN) Manually
-    % Calculate the average power of the received signal
-    sig_power = mean(abs(rx_signal).^2);
+    % Calculate the average power of the tramsmitted signal
+    sig_power = mean(abs(tx_signal).^2);
     
     % Calculate the required noise power based on the desired SNR (convert dB to linear)
     noise_power = sig_power / (10^(snr_db / 10));
