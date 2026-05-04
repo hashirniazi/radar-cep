@@ -1,0 +1,11 @@
+# MATLAB specific ignores
+*.asv
+*.slxc
+*.mat
+*.mex*
+slprj/
+*.autosave
+
+# Ignore figure files if you don't want to track images
+# *.fig
+# *.png
