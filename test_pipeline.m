@@ -39,13 +39,17 @@ switch sim_mode
         disp('>> Initializing Target Masking Scenario...');
         % Override config for multiple targets close together
         target_range = [5000, 5020];    
-        target_velocity = [150, 150];   
+        target_velocity = [150, 130];   
         initial_snr = -10;
         
     case 3
-        disp('>> Clutter module under construction.');
-        return;
-        
+        disp('>> Initializing Clutter Mitigation (MTI) Scenario...');
+        % Target 1: Massive Stationary Mountain at 4km
+        % Target 2: Small Moving Jet at 5km
+        target_range = [4000, 5000];    
+        target_velocity = [0, 127];   
+        target_rcs = [1000, 10]; % Mountain is 100x larger RCS than the jet
+        initial_snr = 10; % Keep noise lower so we can see the clutter    
     case 4
         disp('>> Waveform module under construction.');
         return;
@@ -88,8 +92,21 @@ ylabel('Magnitude (dB)');
 ylim([-40 5]);
 grid on;
 
-% --- 5. Simulate the Environment (Echo & Noise) ---
-[rx_signal, rx_t] = simulate_echo(tx_signal, fs, fc, c, target_range, target_velocity, initial_snr);
+% --- 5. Simulate the Environment & MTI Filtering ---
+if sim_mode == 3
+    % For MTI, we need to fire two pulses separated by the PRI
+    disp('Firing Pulse 1...');
+    [rx_pulse1, rx_t] = simulate_echo(tx_signal, fs, fc, c, target_range, target_velocity, target_rcs, initial_snr, 1, prf);
+    
+    disp('Firing Pulse 2...');
+    [rx_pulse2, ~] = simulate_echo(tx_signal, fs, fc, c, target_range, target_velocity, target_rcs, initial_snr, 2, prf);
+    
+    % Apply 2-Pulse Delay Line Canceller (MTI Filter)
+    rx_signal = rx_pulse2 - rx_pulse1;
+else
+    % Standard single-pulse operation for other scenarios
+    [rx_signal, rx_t] = simulate_echo(tx_signal, fs, fc, c, target_range, target_velocity, target_rcs, initial_snr, 1, prf);
+end
 
 figure('Name', 'Receiver Analysis: Raw Noisy Echo');
 plot(rx_t * 1e6, real(rx_signal), 'Color', [0.5 0.5 0.5]);
