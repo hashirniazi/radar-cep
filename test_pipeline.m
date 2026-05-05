@@ -6,14 +6,56 @@
 clear; clc; close all;
 
 
-% 0. Add all subdirectories in the project root to the path
+% Master Control Menu
 project_root = pwd; 
 addpath(genpath(project_root));
 
+% --- The Interactive Live Demo Menu ---
+disp('===================================================');
+disp('   Advanced DSP Radar Processing Framework         ');
+disp('===================================================');
+disp('Select a Simulation Scenario:');
+disp('1. Baseline LFM (Single Target + CA-CFAR)');
+disp('2. Target Masking Stress Test (Closely Spaced Targets)');
+disp('3. Clutter Mitigation (MTI Filtering) [Pending]');
+disp('4. Waveform Comparison (LFM vs Phase-Coded) [Pending]');
+disp('===================================================');
 
-% 2. Load global parameters
-radar_config;
+sim_mode = input('Enter scenario number (1-4): ');
 
+% --- Dynamic Configuration Override ---
+% Load the base config first
+radar_config; 
+
+switch sim_mode
+    case 1
+        disp('>> Initializing Baseline Single Target Scenario...');
+        % Override config for a single target
+        target_range = 5000;    
+        target_velocity = 150;  
+        initial_snr = -10;
+        
+    case 2
+        disp('>> Initializing Target Masking Scenario...');
+        % Override config for multiple targets close together
+        target_range = [5000, 5020];    
+        target_velocity = [150, 150];   
+        initial_snr = -10;
+        
+    case 3
+        disp('>> Clutter module under construction.');
+        return;
+        
+    case 4
+        disp('>> Waveform module under construction.');
+        return;
+        
+    otherwise
+        disp('Invalid selection. Exiting.');
+        return;
+end
+
+% ... [Rest of your pipeline code runs here using the dynamic variables] ...
 % 3. Generate the waveform
 [tx_signal, t] = generate_lfm_chirp(fs, pulse_width, bandwidth);
 
@@ -74,28 +116,35 @@ grid on;
 target_time_delay = (2 * target_range / c) * 1e6;
 xline(target_time_delay, 'r--', 'True Target Location', 'LabelVerticalAlignment', 'bottom');
 
-% --- 7. Target Detection (CA-CFAR) ---
-% Convert Matched Filter output to power (Square-Law Detection)
+% --- 7. Target Detection (CFAR Comparison) ---
 mf_power = abs(mf_out).^2;
 
-[cfar_threshold, detections] = apply_ca_cfar(mf_power, num_train_cells, num_guard_cells, pfa);
+% Dynamically choose the CFAR algorithm based on the menu selection
+if sim_mode == 1
+    % Scenario 1: Clean single target uses standard CA-CFAR
+    cfar_name = 'CA-CFAR';
+    [cfar_threshold, detections] = apply_ca_cfar(mf_power, num_train_cells, num_guard_cells, pfa);
+else
+    % Scenario 2: Multi-target masking requires OS-CFAR
+    cfar_name = 'OS-CFAR';
+    [cfar_threshold, detections] = apply_os_cfar(mf_power, num_train_cells, num_guard_cells, pfa);
+end
 
 % Convert to Decibels for visualization
 mf_power_db = 10*log10(mf_power / max(mf_power));
 threshold_db = 10*log10(cfar_threshold / max(mf_power));
-
-% Find exactly where the detections happened for plotting
 detect_indices = find(detections == 1);
 
-figure('Name', 'Detection Analysis: CA-CFAR');
+figure('Name', sprintf('Detection Analysis: %s', cfar_name));
 plot(mf_t * 1e6, mf_power_db, 'b', 'DisplayName', 'Signal Power');
 hold on;
-plot(mf_t * 1e6, threshold_db, 'r', 'LineWidth', 1.5, 'DisplayName', 'CA-CFAR Threshold');
+plot(mf_t * 1e6, threshold_db, 'r', 'LineWidth', 1.5, 'DisplayName', sprintf('%s Threshold', cfar_name));
 
-% Overlay markers where the threshold was crossed
-plot(mf_t(detect_indices) * 1e6, mf_power_db(detect_indices), 'go', 'MarkerFaceColor', 'g', 'DisplayName', 'Detections');
+if ~isempty(detect_indices)
+    plot(mf_t(detect_indices) * 1e6, mf_power_db(detect_indices), 'go', 'MarkerFaceColor', 'g', 'DisplayName', 'Detections');
+end
 
-title(sprintf('CA-CFAR Detection (P_{fa} = %1.0e)', pfa));
+title(sprintf('%s Detection (P_{fa} = %1.0e)', cfar_name, pfa));
 xlabel('Time (\mu s)');
 ylabel('Normalized Power (dB)');
 ylim([-60 5]);
