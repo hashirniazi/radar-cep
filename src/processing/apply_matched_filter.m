@@ -2,26 +2,26 @@
 % Hashir Niazi
 % DSP CEP
 
-function [mf_out, mf_time_axis] = apply_matched_filter(rx_signal, tx_signal, fs)
-% Applies a matched filter with optional windowing for sidelobe reduction
-
-% 1. Create the matched filter impulse response
-% Time-reverse and complex-conjugate the transmitted signal
-h_mf = conj(flipud(tx_signal(:)));
-
-% 2. Apply a Window (Addressing the CEP rubric for windowing trade-offs)
-% A Hamming window reduces sidelobes but slightly widens the mainlobe (resolution loss)
-win = hamming(length(h_mf));
-h_mf_windowed = h_mf .* win;
-
-% 3. Perform the convolution (Filtering)
-mf_out = conv(rx_signal(:), h_mf_windowed, 'full');
-
-% 4. Time Axis Alignment
-% Convolution stretches the array. We calculate the new time axis and 
-% shift it back by the length of the pulse so the peak aligns perfectly 
-% with the target's true time delay.
-mf_time_axis = (0:length(mf_out)-1).' / fs;
-filter_delay = length(tx_signal) / fs;
-mf_time_axis = mf_time_axis - filter_delay;
+function [mf_out, mf_time_axis] = apply_matched_filter(rx_signal, tx_signal, fs, sim_mode)
+    % Applies a matched filter with conditional windowing
+    
+    if nargin < 4; sim_mode = 1; end % Default to 1 if not provided
+    
+    h_mf = conj(flipud(tx_signal(:)));
+    
+    % Adaptive Windowing Strategy
+    if sim_mode == 4
+        % Barker codes require perfect amplitude matching. NO WINDOWING.
+        h_mf_windowed = h_mf;
+    else
+        % LFM chirps benefit from sidelobe reduction via Hamming Window.
+        win = hamming(length(h_mf));
+        h_mf_windowed = h_mf .* win;
+    end
+    
+    mf_out = conv(rx_signal(:), h_mf_windowed, 'full');
+    
+    mf_time_axis = (0:length(mf_out)-1).' / fs;
+    filter_delay = length(tx_signal) / fs;
+    mf_time_axis = mf_time_axis - filter_delay;
 end
