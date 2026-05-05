@@ -21,7 +21,7 @@ k_rank = round(num_train * 0.75);
 % OS-CFAR requires a different scaling factor than CA-CFAR.
 % Exact analytical calculation requires complex polynomial root-finding, 
 % so we use an empirical scaling constant tuned for our specific Pfa.
-alpha_os = 4.0; % Tunable parameter for Pfa ~ 1e-4
+alpha_os = 15.0; % Tunable parameter for Pfa ~ 1e-4
 
 % Slide the window across the signal
 for i = (T + G + 1) : (N - T - G)
