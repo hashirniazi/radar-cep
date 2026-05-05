@@ -17,8 +17,8 @@ disp('===================================================');
 disp('Select a Simulation Scenario:');
 disp('1. Baseline LFM (Single Target + CA-CFAR)');
 disp('2. Target Masking Stress Test (Closely Spaced Targets)');
-disp('3. Clutter Mitigation (MTI Filtering) [Pending]');
-disp('4. Waveform Comparison (LFM vs Phase-Coded) [Pending]');
+disp('3. Clutter Mitigation (MTI Filtering)');
+disp('4. Waveform Comparison (LFM vs Phase-Coded)');
 disp('===================================================');
 
 sim_mode = input('Enter scenario number (1-4): ');
