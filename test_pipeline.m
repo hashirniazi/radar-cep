@@ -39,7 +39,8 @@ switch sim_mode
         disp('>> Initializing Target Masking Scenario...');
         % Override config for multiple targets close together
         target_range = [5000, 5020];    
-        target_velocity = [150, 130];   
+        target_velocity = [150, 150];   
+        target_rcs = [10, 10];    
         initial_snr = -10;
         
     case 3
@@ -50,26 +51,37 @@ switch sim_mode
         target_velocity = [0, 127];   
         target_rcs = [1000, 10]; % Mountain is 100x larger RCS than the jet
         initial_snr = 10; % Keep noise lower so we can see the clutter    
+    
     case 4
-        disp('>> Waveform module under construction.');
-        return;
-        
+        disp('>> Initializing Waveform Comparison (13-Bit Barker Code)...');
+        target_range = 5000;    
+        target_velocity = 0;  
+        target_rcs = 10;
+        initial_snr = 10; % Keep SNR high so we can clearly see the sidelobes
+
     otherwise
         disp('Invalid selection. Exiting.');
         return;
 end
 
-% ... [Rest of your pipeline code runs here using the dynamic variables] ...
-% 3. Generate the waveform
-[tx_signal, t] = generate_lfm_chirp(fs, pulse_width, bandwidth);
+% --- 3. Generate the waveform ---
+if sim_mode == 4
+    [tx_signal, t] = generate_barker_code(fs, pulse_width);
+    waveform_name = '13-Bit Barker Code';
+else
+    [tx_signal, t] = generate_lfm_chirp(fs, pulse_width, bandwidth);
+    waveform_name = 'LFM Chirp';
+end
 
+% Optional: Update your figure 1 title dynamically so you know what you are looking at
+figure('Name', sprintf('Transmitter Analysis: %s', waveform_name));
 % 4. Visualization
-figure('Name', 'Transmitter Analysis: LFM Chirp');
+figure('Name', 'Transmitter Analysis');
 
 % --- Time Domain (Real Part) ---
 subplot(2,1,1);
 plot(t * 1e6, real(tx_signal), 'b');
-title('LFM Pulse - Time Domain (Real Part)');
+title(sprintf('%s - Time Domain (Real Part)', waveform_name));
 xlabel('Time (\mu s)');
 ylabel('Amplitude');
 grid on;
@@ -116,7 +128,7 @@ ylabel('Amplitude');
 grid on;
 
 % --- 6. Receiver Processing (Matched Filter) ---
-[mf_out, mf_t] = apply_matched_filter(rx_signal, tx_signal, fs);
+[mf_out, mf_t] = apply_matched_filter(rx_signal, tx_signal, fs, sim_mode);
 
 % Convert the matched filter output to Decibels for standard radar visualization
 mf_mag_db = 20*log10(abs(mf_out) / max(abs(mf_out)));
