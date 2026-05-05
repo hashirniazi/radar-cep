@@ -7,10 +7,10 @@
 
 ---
 
-## 📌 Project Overview
+## Project Overview
 This repository contains a comprehensive, MATLAB-based Digital Signal Processing (DSP) framework for simulating and analyzing radar systems. It is designed as an interactive, menu-driven pipeline to demonstrate core radar concepts, including pulse compression, target detection under noise, clutter mitigation, and the specific trade-offs between different signal processing algorithms.
 
-## ✨ Core Features & Scenarios
+## Core Features & Scenarios
 
 The framework is controlled via a master terminal menu (`test_pipeline.m`), offering four distinct simulation scenarios:
 
@@ -32,7 +32,7 @@ The framework is controlled via a master terminal menu (`test_pipeline.m`), offe
    * Demonstrates perfect, flat sidelobe compression (-22.3 dB) without the need for a Hamming window.
    * Explores advanced edge-cases like Doppler intolerance and Extended Sidelobe Self-Masking.
 
-## 🗂️ Project Structure
+## Project Structure
 
 ```text
 dsp-cep/
