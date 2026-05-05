@@ -22,7 +22,12 @@ target_velocity = 150;  % Target speed (150 m/s moving away)
 target_rcs = 10;        % Radar Cross Section (sq meters)
 
 %% 4. Environment Parameters
-initial_snr = 10;       % Starting Signal-to-Noise Ratio (dB)
+initial_snr = 1;       % Starting Signal-to-Noise Ratio (dB)
+
+%% 5. CFAcd R Detection Parameters
+pfa = 1e-4;             % Probability of False Alarm (1 in 10,000)
+num_train_cells = 40;   % Total training cells (20 on each side)
+num_guard_cells = 4;    % Total guard cells (2 on each side)
 
 % Display confirmation
 disp('Radar configuration loaded successfully.');
