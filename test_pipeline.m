@@ -73,3 +73,32 @@ grid on;
 % Add a line showing exactly where the target *should* be
 target_time_delay = (2 * target_range / c) * 1e6;
 xline(target_time_delay, 'r--', 'True Target Location', 'LabelVerticalAlignment', 'bottom');
+
+% --- 7. Target Detection (CA-CFAR) ---
+% Convert Matched Filter output to power (Square-Law Detection)
+mf_power = abs(mf_out).^2;
+
+[cfar_threshold, detections] = apply_ca_cfar(mf_power, num_train_cells, num_guard_cells, pfa);
+
+% Convert to Decibels for visualization
+mf_power_db = 10*log10(mf_power / max(mf_power));
+threshold_db = 10*log10(cfar_threshold / max(mf_power));
+
+% Find exactly where the detections happened for plotting
+detect_indices = find(detections == 1);
+
+figure('Name', 'Detection Analysis: CA-CFAR');
+plot(mf_t * 1e6, mf_power_db, 'b', 'DisplayName', 'Signal Power');
+hold on;
+plot(mf_t * 1e6, threshold_db, 'r', 'LineWidth', 1.5, 'DisplayName', 'CA-CFAR Threshold');
+
+% Overlay markers where the threshold was crossed
+plot(mf_t(detect_indices) * 1e6, mf_power_db(detect_indices), 'go', 'MarkerFaceColor', 'g', 'DisplayName', 'Detections');
+
+title(sprintf('CA-CFAR Detection (P_{fa} = %1.0e)', pfa));
+xlabel('Time (\mu s)');
+ylabel('Normalized Power (dB)');
+ylim([-60 5]);
+legend('Location', 'best');
+grid on;
+hold off;
